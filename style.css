@@ -231,6 +231,14 @@ body {
     }
 }
 
+.form-group #formaPagamento {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 14px;
+    font-size: 16px;
+    border-radius: 8px;
+}
+
 .toast-sucesso {
     position: fixed;
     top: 20px;
@@ -259,14 +267,14 @@ body {
     transform: translateX(-50%) translateY(0);
 }
 
-/* ==========================================
-   6. CARDÁPIO E CHECKING (BLOCO COMPLETO)
-   ========================================== */
 .hero {
     background: linear-gradient(rgba(26, 21, 18, 0.6), rgba(26, 21, 18, 0.6)),
-        url('imagens/hero.jpg') center/cover no-repeat, #2e1f17;
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' fill='none'%3E%3Cg stroke='%23c05621' stroke-width='4' stroke-linecap='round' stroke-linejoin='round' opacity='0.14'%3E%3C!-- Prato --%3E%3Cpath d='M60 200 C60 160, 90 135, 150 135 C210 135, 240 160, 240 200 Z'/%3E%3Cpath d='M80 200 H220'/%3E%3C!-- Vapor --%3E%3Cpath d='M130 118 C126 108, 136 102, 132 92'/%3E%3Cpath d='M150 114 C146 104, 156 98, 152 88'/%3E%3Cpath d='M170 118 C166 108, 176 102, 172 92'/%3E%3C!-- Garfo e Faca estilizados --%3E%3Cpath d='M126 50 L126 90'/%3E%3Cpath d='M108 52 L126 60 L144 52'/%3E%3Cpath d='M174 90 L174 50 L162 50 L162 64 L174 70'/%3E%3C/g%3E%3C/svg%3E")
+        center/contain no-repeat,
+        #2e1f17;
     color: #fff;
     padding: 48px 36px;
+    background-position: right 10% center;
 }
 
 .subtitulo-topo {
