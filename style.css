@@ -1,6 +1,6 @@
 /* ==========================================
-   1. CONFIGURAÇÕES GLOBAIS E VARIÁVEIS
-   ================================---------- */
+   1. VARIÁVEIS E CONFIGURAÇÕES GLOBAIS
+   ========================================== */
 :root {
     --bg-principal: #f7efe8;
     --bg-card: #ffffff;
@@ -9,6 +9,7 @@
     --cor-primaria: #b35934;
     --cor-primaria-hover: #9e4c2b;
     --borda-sutil: #eae5e0;
+    --borda-input: #dcd4cc;
 }
 
 body {
@@ -19,9 +20,13 @@ body {
     padding: 0;
 }
 
+.oculto {
+    display: none !important;
+}
+
 /* ==========================================
-   2. CABEÇALHO DO SISTEMA (Padronizado)
-   ================================---------- */
+   2. CABEÇALHO DO SISTEMA
+   ========================================== */
 .header-sistema {
     display: flex;
     justify-content: space-between;
@@ -54,41 +59,25 @@ body {
     transition: all 0.2s;
 }
 
-.nav-links a:hover {
-    color: var(--cor-primaria);
-}
-
 .nav-links a.ativo {
     background-color: var(--cor-primaria);
-    color: #ffffff;
+    color: #fff;
     font-weight: 600;
 }
 
 /* ==========================================
-   3. CONTAINERS E ESTRUTURA GERAL
-   ================================---------- */
+   3. ESTRUTURA GERAL DAS PÁGINAS
+   ========================================== */
 .container-principal {
-    max-width: 1200px;
-    margin: 28px 0 60px 48px;
-    padding: 0 24px 0 0;
+    max-width: 1140px;
+    min-height: calc(100vh - 260px);
+    margin: 0 0 0 36px;
+    padding: 28px 32px 48px;
+    background-color: #fbf7f2;
+    border-inline: 1px solid var(--borda-sutil);
+    box-sizing: border-box;
 }
 
-.wrapper-centralizado {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: calc(100vh - 90px);
-    padding: 20px;
-}
-
-.bloco-formulario {
-    width: 100%;
-    max-width: 720px;
-}
-
-/* ==========================================
-   4. ELEMENTOS DE TELA E BOTÕES
-   ================================---------- */
 .secao-topo {
     display: flex;
     justify-content: space-between;
@@ -96,7 +85,8 @@ body {
     margin-bottom: 24px;
 }
 
-.secao-topo h2, .titulo-form-cat {
+.secao-topo h2,
+.titulo-form-cat {
     font-size: 28px;
     font-weight: 800;
     color: var(--texto-principal);
@@ -104,20 +94,16 @@ body {
     letter-spacing: -0.5px;
 }
 
-.btn-novo {
-    background-color: var(--cor-primaria);
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    padding: 12px 24px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
+.cabecalho-pagina {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
-.btn-novo:hover {
-    background-color: var(--cor-primaria-hover);
+.cabecalho-pagina .titulo-form-cat {
+    margin-top: 4px;
 }
 
 .link-voltar-cat {
@@ -129,13 +115,64 @@ body {
     margin-bottom: 8px;
 }
 
+.nav-links a:hover,
 .link-voltar-cat:hover {
     color: var(--cor-primaria);
 }
 
+.espaco-abaixo {
+    margin-bottom: 20px;
+}
+
 /* ==========================================
-   5. CARDS E FORMULÁRIOS
-   ================================---------- */
+   4. BOTÕES (todos os botões principais compartilham o mesmo estilo)
+   ========================================== */
+.btn-novo,
+.prato-controles button,
+.btn-ir-checkout {
+    background-color: var(--cor-primaria);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-novo:hover,
+.btn-ir-checkout:hover,
+.prato-controles button:hover:not(:disabled) {
+    background-color: var(--cor-primaria-hover);
+}
+
+.btn-novo {
+    padding: 12px 24px;
+    font-size: 15px;
+}
+
+.prato-controles button,
+.btn-ir-checkout {
+    padding: 9px 16px;
+    font-size: 13px;
+}
+
+.prato-controles button:disabled,
+.prato-controles input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ==========================================
+   5. CARDS DE CATEGORIA E FORMULÁRIOS
+   ========================================== */
+.card-categoria,
+.card-prato,
+.rodape-checkout {
+    background-color: var(--bg-card);
+    border: 1px solid var(--borda-sutil);
+}
+
 .grid-categorias {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -143,8 +180,6 @@ body {
 }
 
 .card-categoria {
-    background-color: var(--bg-card);
-    border: 1px solid var(--borda-sutil);
     border-radius: 12px;
     padding: 32px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
@@ -152,6 +187,13 @@ body {
     flex-direction: column;
     justify-content: space-between;
     box-sizing: border-box;
+}
+
+.card-info p,
+.prato-desc,
+.toggle-esgotados {
+    font-size: 13px;
+    color: var(--texto-secundario);
 }
 
 .card-info h3 {
@@ -162,8 +204,6 @@ body {
 }
 
 .card-info p {
-    font-size: 13px;
-    color: var(--texto-secundario);
     margin: 0 0 20px 0;
 }
 
@@ -205,30 +245,26 @@ body {
     margin-bottom: 10px;
 }
 
+.form-group input[type="text"],
+#campo-busca,
+.prato-controles input {
+    border: 1px solid var(--borda-input);
+    border-radius: 8px;
+    background-color: var(--bg-card);
+}
+
 .form-group input[type="text"] {
     width: 100%;
     padding: 14px 18px;
     font-size: 16px;
-    border: 1px solid #dcd4cc;
-    border-radius: 8px;
     outline: none;
     box-sizing: border-box;
-    background-color: #ffffff;
     transition: border-color 0.2s;
 }
 
 .form-group input[type="text"]:focus {
     border-color: var(--cor-primaria);
     box-shadow: 0 0 0 3px rgba(179, 89, 52, 0.1);
-}
-
-@media (max-width: 768px) {
-    .grid-categorias {
-        grid-template-columns: 1fr;
-    }
-    .header-sistema {
-        padding: 15px 20px;
-    }
 }
 
 .form-group #formaPagamento {
@@ -239,6 +275,25 @@ body {
     border-radius: 8px;
 }
 
+.painel-edicao {
+    grid-column: 1 / -1;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.opcoes-entrega {
+    gap: 26px;
+    margin-top: 10px;
+}
+
+#detalhes-confirmacao {
+    margin: 10px 0 16px;
+}
+
+/* ==========================================
+   6. AVISO (TOAST)
+   ========================================== */
 .toast-sucesso {
     position: fixed;
     top: 20px;
@@ -261,12 +316,19 @@ body {
     z-index: 1000;
 }
 
+.toast-sucesso::before {
+    content: '✔';
+}
+
 .toast-sucesso.mostrar {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) translateY(0);
 }
 
+/* ==========================================
+   7. CARDÁPIO (index.html)
+   ========================================== */
 .hero {
     background: linear-gradient(rgba(26, 21, 18, 0.6), rgba(26, 21, 18, 0.6)),
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' fill='none'%3E%3Cg stroke='%23c05621' stroke-width='4' stroke-linecap='round' stroke-linejoin='round' opacity='0.14'%3E%3C!-- Prato --%3E%3Cpath d='M60 200 C60 160, 90 135, 150 135 C210 135, 240 160, 240 200 Z'/%3E%3Cpath d='M80 200 H220'/%3E%3C!-- Vapor --%3E%3Cpath d='M130 118 C126 108, 136 102, 132 92'/%3E%3Cpath d='M150 114 C146 104, 156 98, 152 88'/%3E%3Cpath d='M170 118 C166 108, 176 102, 172 92'/%3E%3C!-- Garfo e Faca estilizados --%3E%3Cpath d='M126 50 L126 90'/%3E%3Cpath d='M108 52 L126 60 L144 52'/%3E%3Cpath d='M174 90 L174 50 L162 50 L162 64 L174 70'/%3E%3C/g%3E%3C/svg%3E")
@@ -289,16 +351,6 @@ body {
     font-size: 36px;
     line-height: 1.15;
     margin: 0 0 10px;
-}
-
-.container-principal {
-    max-width: 1140px;
-    min-height: calc(100vh - 260px);
-    margin: 0 0 0 36px;
-    padding: 28px 32px 48px;
-    background-color: #fbf7f2;
-    border-inline: 1px solid var(--borda-sutil);
-    box-sizing: border-box;
 }
 
 .controles,
@@ -324,9 +376,6 @@ body {
     flex: 1;
     min-width: 220px;
     padding: 11px 14px;
-    border: 1px solid #dcd4cc;
-    border-radius: 8px;
-    background: var(--bg-card);
 }
 
 .filtros-categoria button {
@@ -358,10 +407,11 @@ body {
     margin: 22px 0 12px;
 }
 
+/* ==========================================
+   8. CARDS DE PRATO E RODAPÉ DO CARRINHO
+   ========================================== */
 .card-prato,
 .rodape-checkout {
-    background: var(--bg-card);
-    border: 1px solid var(--borda-sutil);
     border-radius: 10px;
     padding: 16px 22px;
     margin-bottom: 12px;
@@ -376,27 +426,34 @@ body {
     grid-template-columns: 280px 1fr auto;
 }
 
+.card-vazio {
+    display: flex;
+}
+
+.rodape-checkout {
+    margin-top: 32px;
+    flex-wrap: wrap;
+}
+
 .prato-esquerda,
-.prato-meio {
+.prato-meio,
+.prato-direita {
     display: flex;
     align-items: center;
 }
 
-.prato-meio {
-    text-align: left;
+.prato-direita {
+    gap: 14px;
 }
 
 .prato-desc,
 .toggle-esgotados {
-    font-size: 13px;
-    color: var(--texto-secundario);
     margin: 0;
 }
 
-.prato-direita {
-    display: flex;
-    align-items: center;
-    gap: 14px;
+.prato-status {
+    display: block;
+    margin-top: 4px;
 }
 
 .prato-preco {
@@ -411,41 +468,21 @@ body {
 .prato-controles input {
     width: 56px;
     padding: 7px;
-    border: 1px solid #dcd4cc;
-    border-radius: 7px;
     text-align: center;
 }
 
-.prato-controles button,
-.btn-ir-checkout {
-    background: var(--cor-primaria);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 9px 16px;
-    font-size: 13px;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.prato-controles button:hover:not(:disabled),
-.btn-ir-checkout:hover {
-    background: var(--cor-primaria-hover);
-}
-
-.prato-controles button:disabled,
-.prato-controles input:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.rodape-checkout {
-    margin-top: 32px;
-    flex-wrap: wrap;
-}
-
+/* ==========================================
+   9. TELAS PEQUENAS (celular)
+   ========================================== */
 @media (max-width: 768px) {
+    .header-sistema {
+        padding: 15px 20px;
+    }
+
+    .grid-categorias {
+        grid-template-columns: 1fr;
+    }
+
     .hero {
         padding: 32px 20px;
     }

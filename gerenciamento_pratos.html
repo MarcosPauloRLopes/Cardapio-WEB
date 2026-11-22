@@ -17,20 +17,20 @@
     </header>
 
     <main class="container-principal">
-        <div class="card-categoria" style="margin-bottom: 20px;">
-            <div class="card-info" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 12px;">
+        <div class="card-categoria espaco-abaixo">
+            <div class="cabecalho-pagina">
                 <div>
                     <a href="development.html" class="link-voltar-cat">← Voltar para Categorias</a>
-                    <h2 id="tituloCategoriaNome" class="titulo-form-cat" style="margin-top: 4px;">Gerenciamento de Pratos</h2>
+                    <h2 id="tituloCategoriaNome" class="titulo-form-cat">Gerenciamento de Pratos</h2>
                 </div>
                 <button type="button" class="btn-novo" onclick="alternarFormPrato()">+ Novo prato</button>
             </div>
         </div>
 
-        <div id="cardNovoPrato" class="card-categoria" style="display: none; margin-bottom: 20px;">
-            <div class="card-info" style="width: 100%;">
+        <div id="cardNovoPrato" class="card-categoria espaco-abaixo oculto">
+            <div class="card-info">
                 <h3>Adicionar novo prato</h3>
-                <form onsubmit="enviarNovoPrato(event)" style="margin-top: 12px;">
+                <form onsubmit="enviarNovoPrato(event)">
                     <div class="form-group">
                         <label for="nomePrato">Nome do prato *</label>
                         <input type="text" id="nomePrato" required placeholder="Ex: Suco de Laranja Natural">
@@ -57,95 +57,94 @@
         <div id="listaPratos"></div>
     </main>
 
+    <div id="toastSucesso" class="toast-sucesso">
+        <span id="textoToast"></span>
+    </div>
+
     <script src="script.js"></script>
     <script>
-        const categoriaId = new URLSearchParams(window.location.search).get('categoria_id');
+        // Número da categoria vindo da URL (0 se não tiver).
+        const categoriaId = Number(new URLSearchParams(window.location.search).get('categoria_id'));
 
         function alternarFormPrato() {
             const box = document.getElementById('cardNovoPrato');
-            box.style.display = box.style.display === 'none' ? 'block' : 'none';
-            if (box.style.display === 'block') document.getElementById('nomePrato')?.focus();
+            box.classList.toggle('oculto');
+            if (!box.classList.contains('oculto')) document.getElementById('nomePrato').focus();
         }
 
         async function carregarPratosTela() {
-            const listaEl = document.getElementById('listaPratos');
-            const tituloEl = document.getElementById('tituloCategoriaNome');
+            const lista = document.getElementById('listaPratos');
 
             try {
-                const [resCat, resPratos] = await Promise.all([
-                    fetch(`${API_URL}/categorias`, { cache: 'no-store' }),
-                    fetch(`${API_URL}/pratos`, { cache: 'no-store' })
-                ]);
-                const categorias = await resCat.json();
-                const todosPratos = await resPratos.json();
+                const [listaCategorias, todosPratos] = await Promise.all([chamarApi('/categorias'), chamarApi('/pratos')]);
 
-                const cat = Array.isArray(categorias)
-                    ? categorias.find((c) => Number(c.id_categoria) === Number(categoriaId))
-                    : null;
-                if (cat) tituloEl.textContent = cat.nome_categoria;
+                const categoria = listaCategorias.find((c) => c.id_categoria === categoriaId);
+                if (categoria) document.getElementById('tituloCategoriaNome').textContent = categoria.nome_categoria;
 
-                const filtrados = Array.isArray(todosPratos)
-                    ? todosPratos.filter((p) => !categoriaId || Number(p.id_categoria_prato) === Number(categoriaId))
-                    : [];
+                const pratosDaCategoria = todosPratos.filter((p) => !categoriaId || p.id_categoria_prato === categoriaId);
 
-                listaEl.innerHTML = '';
-                if (!filtrados.length) {
-                    listaEl.innerHTML = '<p>Nenhum prato cadastrado nesta categoria.</p>';
+                lista.innerHTML = '';
+                if (pratosDaCategoria.length === 0) {
+                    lista.innerHTML = '<p>Nenhum prato cadastrado nesta categoria.</p>';
                     return;
                 }
 
-                filtrados.forEach((p) => {
-                    const disp = Number(p.disponivel) === 1;
-                    const preco = Number(p.preco_prato ?? 0).toFixed(2).replace('.', ',');
+                pratosDaCategoria.forEach((p) => {
+                    const disponivel = p.disponivel === 1;
+
                     const card = document.createElement('div');
                     card.className = 'card-prato';
                     card.innerHTML = `
                         <div class="prato-esquerda"><strong class="prato-nome">${p.nome_prato}</strong></div>
                         <div class="prato-meio">
                             ${p.desc_prato ? `<span class="prato-desc">${p.desc_prato}</span>` : ''}
-                            <small style="display: block; margin-top: 4px;">
-                                R$ ${preco} • Status: <strong>${disp ? 'Disponível' : 'Indisponível'}</strong>
+                            <small class="prato-status">
+                                ${formatarMoeda(p.preco_prato)} • Status: <strong>${disponivel ? 'Disponível' : 'Indisponível'}</strong>
                             </small>
                         </div>
                         <div class="prato-direita">
                             <div class="prato-controles">
-                                <button type="button" onclick="alternarDisponibilidadePrato(${p.id_prato}, ${p.disponivel}).then(r => r && carregarPratosTela())">
-                                    ${disp ? 'Marcar indisponível' : 'Marcar disponível'}
+                                <button type="button" onclick="alternarDisponibilidadeTela(${p.id_prato}, ${p.disponivel})">
+                                    ${disponivel ? 'Marcar indisponível' : 'Marcar disponível'}
                                 </button>
-                                <button type="button" class="btn-excluir" onclick="removerPrato(${p.id_prato}).then(r => r && carregarPratosTela())">
+                                <button type="button" class="btn-excluir" onclick="excluirPratoTela(${p.id_prato})">
                                     Remover
                                 </button>
                             </div>
                         </div>
                     `;
-                    listaEl.appendChild(card);
+                    lista.appendChild(card);
                 });
-            } catch (err) {
-                console.error('Erro ao carregar pratos:', err);
-                listaEl.innerHTML = '<p>Erro ao carregar os pratos.</p>';
+            } catch (erro) {
+                console.error('Erro ao carregar pratos:', erro);
+                lista.innerHTML = '<p>Erro ao carregar os pratos.</p>';
             }
         }
 
-        function enviarNovoPrato(event) {
-            event.preventDefault();
-            const preco = parseFloat(document.getElementById('precoPrato').value.trim().replace(',', '.'));
-            if (isNaN(preco) || preco <= 0) {
-                alert('O preço do prato deve ser maior que R$ 0,00.');
-                return;
-            }
+        async function alternarDisponibilidadeTela(id, disponivelAtual) {
+            if (await alternarDisponibilidadePrato(id, disponivelAtual)) carregarPratosTela();
+        }
 
-            adicionarPrato({
-                nome_prato: document.getElementById('nomePrato').value.trim(),
-                desc_prato: document.getElementById('descricaoPrato').value.trim(),
-                preco_prato: preco,
-                id_categoria_prato: Number(categoriaId),
-                disponivel: 1
-            }).then((res) => {
-                if (!res) return;
+        async function excluirPratoTela(id) {
+            if (await removerPrato(id)) carregarPratosTela();
+        }
+
+        async function enviarNovoPrato(event) {
+            event.preventDefault();
+
+            // O servidor valida o nome, o preço e a categoria e devolve a mensagem de erro.
+            const cadastrou = await adicionarPrato({
+                nome_prato: document.getElementById('nomePrato').value,
+                desc_prato: document.getElementById('descricaoPrato').value,
+                preco_prato: document.getElementById('precoPrato').value,
+                id_categoria_prato: categoriaId
+            });
+
+            if (cadastrou) {
                 event.target.reset();
                 alternarFormPrato();
                 carregarPratosTela();
-            });
+            }
         }
 
         window.addEventListener('DOMContentLoaded', carregarPratosTela);
