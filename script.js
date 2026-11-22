@@ -38,8 +38,8 @@ function carregarCategoriasEmCards() {
                     </div>
                     <div class="card-divider"></div>
                     <div class="card-acoes">
-                        <button type="button" class="btn-ver" onclick="verPratos(${cat.id_categoria})">Ver lista de pratos</button>
-                        <button type="button" class="btn-editar" onclick="modificarCategoria(${cat.id_categoria}, '${(cat.nome_categoria || '').replace(/'/g, "\\'")}', '${(cat.descricao_categoria || '').replace(/'/g, "\\'")}')">Editar Categoria</button>
+                        <button type="button" class="btn-ver" onclick="window.location.href='gerenciamento_pratos.html?categoria_id=${cat.id_categoria}'">Editar Pratos</button>
+                        <button type="button" class="btn-editar" onclick="window.location.href='gerenciamento_categorias.html?categoria_id=${cat.id_categoria}'">Editar Categoria</button>
                         <button type="button" class="btn-excluir" onclick="removerCategoria(${cat.id_categoria})">Excluir Categoria</button>
                     </div>
                 `;
@@ -71,63 +71,69 @@ function adicionarCategoria(dadosCategoria) {
         });
 }
 
-function modificarCategoria(id_categoria, nomeAtual = '', descAtual = '') {
-    const novoNome = prompt('Novo nome da categoria:', nomeAtual);
-    if (novoNome === null || novoNome.trim() === '') return;
+function modificarCategoria(id_categoria, nomeAtual = '', descAtual = '', novaDescricaoParam = null) {
+    const novaDescricao = novaDescricaoParam !== null
+        ? novaDescricaoParam
+        : prompt('Nova descrição da categoria:', descAtual ?? '');
 
-    const novaDescricao = prompt('Nova descrição da categoria:', descAtual ?? '');
-    if (novaDescricao === null) return;
+    if (novaDescricao === null) return Promise.resolve(null);
 
-    fetch(`${API_URL}/categorias/${id_categoria}`, {
+    return fetch(`${API_URL}/categorias/${id_categoria}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            nome_categoria: novoNome.trim(),
-            descricao_categoria: novaDescricao.trim()
+            nome_categoria: nomeAtual,
+            descricao_categoria: String(novaDescricao).trim()
         })
     })
         .then(async (res) => {
             const resposta = await res.json();
             if (!res.ok) {
                 alert(resposta.erro || 'Não foi possível modificar a categoria.');
-                return;
+                return null;
             }
             alert(resposta.mensagem || 'Categoria atualizada com sucesso!');
-            carregarCategoriasEmCards();
-            carregarDados();
+            if (typeof carregarCategoriasEmCards === 'function') carregarCategoriasEmCards();
+            if (typeof carregarDados === 'function') carregarDados();
+            return resposta;
         })
         .catch((err) => {
             console.error('Erro ao modificar categoria:', err);
             alert('Erro de conexão com o servidor.');
+            return null;
         });
 }
 
 function removerCategoria(id_categoria) {
     if (!confirm('Tem certeza que deseja excluir esta categoria?')) {
-        return;
+        return Promise.resolve(null);
     }
 
-    fetch(`${API_URL}/categorias/${id_categoria}`, {
+    return fetch(`${API_URL}/categorias/${id_categoria}`, {
         method: 'DELETE'
     })
         .then(async (res) => {
             const resposta = await res.json();
             if (!res.ok) {
                 alert(resposta.erro || 'Não foi possível excluir a categoria.');
-                return;
+                return null;
             }
-            alert(resposta.mensagem || 'Categoria excluída com sucesso!');
-            carregarCategoriasEmCards();
-            carregarDados();
+            if (typeof mostrarAvisoToast === 'function') {
+                mostrarAvisoToast(resposta.mensagem || 'Categoria excluída com sucesso!', 3000);
+            }
+            if (typeof carregarCategoriasEmCards === 'function') carregarCategoriasEmCards();
+            if (typeof carregarDados === 'function') carregarDados();
+            return resposta;
         })
         .catch((err) => {
-            console.error('Erro na requisição de exclusão:', err);
+            console.error('Erro ao excluir categoria:', err);
             alert('Erro de conexão com o servidor.');
+            return null;
         });
 }
 
 function abrirCadastroCategoria() {
-    window.location.href = 'adicionar_categoria.html';
+    window.location.href = 'gerenciamento_categorias.html';
 }
 
 // ==========================================
@@ -161,43 +167,30 @@ function adicionarPrato(dadosPrato) {
         });
 }
 
-function modificarPrato(id_prato, dadosAtualizados) {
-    const pratoAtual = pratos.find((p) => Number(p.id_prato) === Number(id_prato)) || {};
+function alternarDisponibilidadePrato(id_prato, disponivelAtual) {
+    const listaBase = typeof pratos !== 'undefined' && Array.isArray(pratos) ? pratos : [];
+    const pratoEncontrado = listaBase.find((p) => Number(p.id_prato) === Number(id_prato));
+    const atual = disponivelAtual !== undefined ? Number(disponivelAtual) : Number(pratoEncontrado?.disponivel ?? 1);
+    const novaDisponibilidade = atual === 1 ? 0 : 1;
 
-    const novoNome = dadosAtualizados?.nome_prato ?? prompt('Novo nome do prato:', pratoAtual.nome_prato || '');
-    if (novoNome === null || String(novoNome).trim() === '') return;
-
-    const novaDesc = dadosAtualizados?.desc_prato ?? prompt('Nova descrição do prato:', pratoAtual.desc_prato || '');
-    if (novaDesc === null) return;
-
-    const novoPrecoInput = dadosAtualizados?.preco_prato ?? prompt('Novo preço do prato:', pratoAtual.preco_prato ?? '');
-    if (novoPrecoInput === null || String(novoPrecoInput).trim() === '') return;
-
-    const payload = {
-        nome_prato: String(novoNome).trim(),
-        desc_prato: String(novaDesc).trim(),
-        preco_prato: Number(String(novoPrecoInput).replace(',', '.')),
-        disponivel: dadosAtualizados?.disponivel ?? pratoAtual.disponivel ?? 1,
-        id_categoria_prato: dadosAtualizados?.id_categoria_prato ?? pratoAtual.id_categoria_prato
-    };
-
-    fetch(`${API_URL}/pratos/${id_prato}`, {
-        method: 'PUT',
+    return fetch(`${API_URL}/pratos/${id_prato}/disponibilidade`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ disponivel: novaDisponibilidade })
     })
         .then(async (res) => {
             const resposta = await res.json();
             if (!res.ok) {
-                alert(resposta.erro || 'Não foi possível modificar o prato.');
-                return;
+                alert(resposta.erro || resposta.mensagem || 'Não foi possível alterar a disponibilidade.');
+                return null;
             }
-            alert(resposta.mensagem || 'Prato atualizado com sucesso!');
-            carregarDados();
+            if (typeof carregarDados === 'function') carregarDados();
+            return resposta;
         })
         .catch((err) => {
-            console.error('Erro ao modificar prato:', err);
+            console.error('Erro ao alterar disponibilidade:', err);
             alert('Erro de conexão com o servidor.');
+            return null;
         });
 }
 

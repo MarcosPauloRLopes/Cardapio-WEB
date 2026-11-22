@@ -98,10 +98,15 @@ app.delete('/categorias/:id', (req, res) => {
 // Rota para Modificar uma categoria existente.
 app.put('/categorias/:id', (req, res) => {
     const { id } = req.params;
-    const { nome_categoria } = req.body;
-    const query = 'UPDATE categoria SET nome_categoria = ? WHERE id_categoria = ?';
+    const { descricao_categoria } = req.body;
 
-    db.query(query, [nome_categoria, id], (err, result) => {
+    const query = `
+        UPDATE categoria
+        SET descricao_categoria = ?
+        WHERE id_categoria = ?
+    `;
+
+    db.query(query, [descricao_categoria ?? '', id], (err, result) => {
         if (err) {
             console.error("Erro ao atualizar categoria:", err);
             return res.status(500).json({ erro: "Erro ao atualizar categoria." });

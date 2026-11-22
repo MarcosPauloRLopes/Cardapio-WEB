@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sabor de Casa - Gerenciar Categorias</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="header-sistema">
+        <div class="logo">Sabor de Casa</div>
+        <nav class="nav-links">
+            <a href="index.html">Cardápio</a>
+            <a href="development.html" class="ativo">Gerenciar</a>
+        </nav>
+    </header>
+
+    <main class="container-principal">
+        <div class="card-categoria" style="margin-bottom: 20px;">
+            <div class="card-info" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <a href="development.html" class="link-voltar-cat">← Categorias</a>
+                    <h2 class="titulo-form-cat" style="margin-top: 4px;">Gerenciar Categorias</h2>
+                </div>
+                <button type="button" class="btn-novo" onclick="toggleFormCat()">+ Nova categoria</button>
+            </div>
+        </div>
+
+        <div id="boxNovaCategoria" class="card-categoria" style="display: none; margin-bottom: 20px;">
+            <div class="card-info" style="width: 100%;">
+                <form onsubmit="criarCategoria(event)" style="width: 100%;">
+                    <h3 class="titulo-form-cat">Nova categoria</h3>
+
+                    <div class="form-group">
+                        <label for="nomeCat">Nome da categoria *</label>
+                        <input type="text" id="nomeCat" required placeholder="Ex: Bebidas">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descCat">Descrição (opcional)</label>
+                        <input type="text" id="descCat" placeholder="Ex: Sucos, refrigerantes e águas" maxlength="255">
+                    </div>
+
+                    <div class="prato-controles">
+                        <button type="submit" class="btn-novo">Cadastrar categoria</button>
+                        <button type="button" onclick="toggleFormCat()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="listaCategorias"></div>
+    </main>
+    
+    <div id="toastSucesso" class="toast-sucesso">
+        <span id="textoToast"></span>
+    </div>
+    
+    <script src="script.js"></script>
+    
+    <script>
+        let categoriasDados = [];
+        let idEditando = null;
+
+        function toggleFormCat() {
+            const box = document.getElementById('boxNovaCategoria');
+            const abrir = box.style.display === 'none';
+            box.style.display = abrir ? 'block' : 'none';
+            if (abrir) document.getElementById('nomeCat')?.focus();
+        }
+
+        function abrirFecharEdicao(id) {
+            idEditando = Number(idEditando) === Number(id) ? null : Number(id);
+            renderCategorias();
+            if (idEditando !== null) {
+                document.getElementById(`desc-input-${id}`)?.focus();
+            }
+        }
+
+        async function listarCategorias() {
+            const el = document.getElementById('listaCategorias');
+            try {
+                const res = await fetch(`${API_URL}/categorias?t=${Date.now()}`, { cache: 'no-store' });
+                const dados = await res.json();
+                categoriasDados = Array.isArray(dados) ? dados : [];
+                renderCategorias();
+            } catch (err) {
+                console.error('Erro ao carregar categorias:', err);
+                el.innerHTML = '<p>Erro ao carregar categorias.</p>';
+            }
+        }
+
+        function renderCategorias() {
+            const el = document.getElementById('listaCategorias');
+            el.innerHTML = '';
+
+            if (!categoriasDados.length) {
+                el.innerHTML = '<p>Nenhuma categoria cadastrada.</p>';
+                return;
+            }
+
+            categoriasDados.forEach((c) => {
+                const total = Number(c.total_pratos ?? 0);
+                const aberto = Number(idEditando) === Number(c.id_categoria);
+                const nomeEsc = (c.nome_categoria || '').replace(/'/g, "\\'");
+                const descEsc = (c.descricao_categoria || '').replace(/'/g, "\\'");
+                const descAttr = (c.descricao_categoria || '').replace(/"/g, '&quot;');
+
+                const card = document.createElement('div');
+                card.className = 'card-prato';
+                card.style.flexWrap = 'wrap';
+
+                card.innerHTML = `
+                    <div class="prato-esquerda">
+                        <strong class="prato-nome">${c.nome_categoria}</strong>
+                    </div>
+
+                    <div class="prato-meio">
+                        <span class="prato-desc">
+                            ${total} prato(s)${c.descricao_categoria ? ` • ${c.descricao_categoria}` : ''}
+                        </span>
+                    </div>
+
+                    <div class="prato-direita">
+                        <div class="prato-controles">
+                            <button type="button" class="btn-editar" onclick="abrirFecharEdicao(${c.id_categoria})">
+                                Editar Descrição
+                            </button>
+                            <button
+                                type="button"
+                                class="btn-excluir"
+                                ${total > 0 ? 'disabled title="Categoria possui pratos"' : ''}
+                                onclick="excluirCategoriaTela(${c.id_categoria})"
+                            >
+                                Remover
+                            </button>
+                        </div>
+                    </div>
+
+                    ${aberto ? `
+                        <div style="width: 100%; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08);">
+                            <div class="form-group">
+                                <label for="desc-input-${c.id_categoria}">Qual a nova descrição para "${c.nome_categoria}"?</label>
+                                <input type="text" id="desc-input-${c.id_categoria}" value="${descAttr}" maxlength="255" placeholder="Ex: Sucos, refrigerantes e águas">
+                            </div>
+                            <div class="prato-controles">
+                                <button type="button" class="btn-novo" onclick="confirmarEdicao(${c.id_categoria}, '${nomeEsc}', '${descEsc}')">
+                                    Salvar descrição
+                                </button>
+                                <button type="button" onclick="abrirFecharEdicao(${c.id_categoria})">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+
+                el.appendChild(card);
+            });
+        }
+
+        function confirmarEdicao(id, nome, descAtual) {
+            const input = document.getElementById(`desc-input-${id}`);
+            if (!input) return;
+
+            const promessa = modificarCategoria(id, nome, descAtual, input.value);
+
+            if (promessa && typeof promessa.then === 'function') {
+                promessa.then((res) => {
+                    if (res) {
+                        idEditando = null;
+                        listarCategorias();
+                    }
+                });
+            } else {
+                idEditando = null;
+                setTimeout(listarCategorias, 300);
+            }
+        }
+
+        async function excluirCategoriaTela(id_categoria) {
+            const res = await removerCategoria(id_categoria);
+            if (res) {
+                if (Number(idEditando) === Number(id_categoria)) idEditando = null;
+                await listarCategorias();
+            }
+        }
+
+        async function criarCategoria(e) {
+            e.preventDefault();
+            const nome_categoria = document.getElementById('nomeCat').value.trim();
+            const descricao_categoria = document.getElementById('descCat').value.trim();
+            if (!nome_categoria) return;
+
+            const res = await fetch(`${API_URL}/categorias`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome_categoria, descricao_categoria })
+            });
+
+            const resposta = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                alert(resposta.erro || 'Não foi possível cadastrar a categoria.');
+                return;
+            }
+
+            e.target.reset();
+            toggleFormCat();
+            await listarCategorias();
+
+            if (typeof mostrarAvisoToast === 'function') {
+                mostrarAvisoToast(resposta.mensagem || 'Categoria cadastrada com sucesso!', 3000);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            listarCategorias();
+
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('nova') === 'true') {
+                const box = document.getElementById('boxNovaCategoria');
+                if (box) {
+                    box.style.display = 'block';
+                    document.getElementById('nomeCat')?.focus();
+                }
+            }
+        });
+    
+    </script>
+</body>
+</html>
